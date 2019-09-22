@@ -17,6 +17,15 @@ in pkgs.lib.listToAttrs (pkgs.lib.crossLists (predictable: withNetworkd: {
       networking.useNetworkd = withNetworkd;
       networking.dhcpcd.enable = !withNetworkd;
       networking.useDHCP = !withNetworkd;
+
+      # Check if predictable interface names are working in stage-1
+      boot.initrd.extraUtilsCommands = ''
+        copy_bin_and_libs ${pkgs.iproute}/sbin/ip
+      '';
+      boot.initrd.postDeviceCommands = ''
+        ip link
+        ip link show eth0 ${if predictable then "&&" else "||"} exit 1
+      '';
     };
 
     testScript = ''
